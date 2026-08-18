@@ -25,9 +25,9 @@ eigen, gratis reverse-engineerde implementatie.
 | Vervoerder | Land/regio | Status |
 |---|---|---|
 | bpost | België | ✅ werkend (best-effort, `track.bpost.cloud`) |
+| PostNL | Nederland | ✅ werkend (best-effort, `jouw.postnl.nl` — zie caveat in `carriers/postnl.py` over bestemmingslandcode) |
 | DPD | EU | 🚧 skelet |
 | GLS | EU | 🚧 skelet |
-| PostNL | Nederland | 🚧 skelet |
 | DHL | Duitsland/intl. | 🚧 skelet |
 | Deutsche Post | Duitsland | 🚧 skelet |
 | La Poste / Colissimo | Frankrijk | 🚧 skelet |

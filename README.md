@@ -15,61 +15,40 @@ aankondiging stoppen als de vervoerder zijn website aanpast.
 ## Status per vervoerder
 
 De dropdown in de kaart toont alle onderstaande Europese vervoerders.
-**bpost** werkt volledig gratis en rechtstreeks. Alle andere vervoerders
-lopen via de **17TRACK-aggregator** — één gratis API-key geeft toegang tot
-al die vervoerders tegelijk, in plaats van 21 aparte breekbare
-scraping-implementaties.
+Enkel **bpost** haalt echt live gegevens op (gratis, rechtstreeks). De rest
+staat klaar als skelet — duidelijk gemarkeerd in de kaart met "nog niet
+geïmplementeerd" — zodat je zelf, of ik op jouw vraag, later kan invullen
+welke je nodig hebt, via de stappen verderop in dit document. Geen
+betalende externe dienst nodig: elke vervoerder wordt net als bpost een
+eigen, gratis reverse-engineerde implementatie.
 
-### 17TRACK instellen (nodig voor alles behalve bpost)
-
-1. Maak een gratis account op [17track.net](https://www.17track.net) of
-   [api.17track.net](https://api.17track.net).
-2. Genereer in het dashboard een API-key.
-3. Vul die in bij **Instellingen → Apparaten & diensten → Belgian Parcels
-   → Configureren**.
-
-Zonder key geven deze vervoerders een duidelijke foutmelding in de kaart
-i.p.v. stil te falen.
-
-| Vervoerder | Land/regio | 17TRACK-code |
+| Vervoerder | Land/regio | Status |
 |---|---|---|
-| bpost | België | — (eigen, gratis implementatie) |
-| DPD | België | 100321 |
-| GLS | EU (algemeen) | 100005 |
-| PostNL | Nederland | 14041 (vereist ook postcode) |
-| DHL Paket | Duitsland | 7041 |
-| Deutsche Post | Duitsland | 7044 |
-| La Poste / Colissimo | Frankrijk | 6051 |
-| Chronopost | Frankrijk | 100273 |
-| Mondial Relay | Frankrijk | 100304 |
-| UPS | internationaal | 100002 |
-| FedEx | internationaal | 100003 |
-| Royal Mail | Verenigd Koninkrijk | 11031 |
-| Evri (Hermes) | Verenigd Koninkrijk | 100331 |
-| An Post | Ierland | 9051 |
-| Poste Italiane | Italië | 9071 |
-| Correos | Spanje | 19181 |
-| CTT | Portugal | 16101 |
-| Österreichische Post | Oostenrijk | 1161 |
-| PostNord | Zweden | 19241 |
-| Poczta Polska | Polen | 16081 |
-| InPost | Polen | 100043 |
-| Swiss Post | Zwitserland | 19251 |
+| bpost | België | ✅ werkend (best-effort, `track.bpost.cloud`) |
+| DPD | EU | 🚧 skelet |
+| GLS | EU | 🚧 skelet |
+| PostNL | Nederland | 🚧 skelet |
+| DHL | Duitsland/intl. | 🚧 skelet |
+| Deutsche Post | Duitsland | 🚧 skelet |
+| La Poste / Colissimo | Frankrijk | 🚧 skelet |
+| Chronopost | Frankrijk | 🚧 skelet |
+| Mondial Relay | Frankrijk/België | 🚧 skelet |
+| UPS | internationaal | 🚧 skelet |
+| FedEx | internationaal | 🚧 skelet |
+| Royal Mail | Verenigd Koninkrijk | 🚧 skelet |
+| Evri (Hermes) | Verenigd Koninkrijk | 🚧 skelet |
+| An Post | Ierland | 🚧 skelet |
+| Poste Italiane | Italië | 🚧 skelet |
+| Correos | Spanje | 🚧 skelet |
+| CTT | Portugal | 🚧 skelet |
+| Österreichische Post | Oostenrijk | 🚧 skelet |
+| PostNord | Zweden/Denemarken | 🚧 skelet |
+| Poczta Polska | Polen | 🚧 skelet |
+| InPost | Polen | 🚧 skelet |
+| Swiss Post | Zwitserland | 🚧 skelet |
 
-**Let op — enkele caveats:**
-- **DPD** en **PostNord** hebben geen generieke pan-Europese code bij
-  17TRACK; hierboven staat de Belgische resp. Zweedse variant. Verstuur je
-  DPD-pakjes vanuit een ander land, of PostNord vanuit Denemarken? Pas dan
-  `carrier_code` aan in `carriers/dpd.py` / `carriers/postnord.py` (zie de
-  volledige lijst op
-  [apicarrier.all.json](https://res.17track.net/asset/carrier/info/apicarrier.all.json)).
-- **PostNord dekt enkel Zweden en Denemarken** — Noorwegen gebruikt Bring,
-  Finland gebruikt Posti (dat zijn aparte vervoerders bij 17TRACK).
-- De statusparsing in `carriers/aggregator.py` is gebaseerd op 17TRACK's
-  officiële documentatie maar niet getest tegen een live response — werkt
-  de status niet correct, zet dan tijdelijk debug-logging aan (zie verderop)
-  en pas `_parse_track_info()` aan op basis van wat je account echt
-  teruggeeft.
+Een skelet-vervoerder toevoegen in de kaart geeft meteen een duidelijke
+foutmelding ("nog niet geïmplementeerd") in plaats van stil te falen.
 
 ## Installatie via HACS
 
@@ -97,9 +76,12 @@ De kaart toont:
 - **"Nieuw pakket toevoegen"**: trackingnummer, vervoerder (dropdown), en
   — enkel zichtbaar wanneer nodig, zoals bij bpost — een postcode-veld.
   Klik "Toevoegen" en het pakje verschijnt meteen in de lijst eronder.
-- **"Lopende leveringen"**: elk toegevoegd pakje met status-icoon en
-  omschrijving, live bijgewerkt. Klik op een pakje voor het volledige
-  "meer info"-paneel (met alle attributen, incl. verwachte leverdatum).
+- **"Lopende leveringen"**: elk toegevoegd pakje met status-icoon,
+  omschrijving en laatste update, live bijgewerkt. Klik op een pakje (niet
+  op het kruisje) voor het volledige "meer info"-paneel met alle
+  attributen. Klik op het **rode kruisje** rechts van een pakje om het te
+  verwijderen — direct, geen bevestigingsvraag, roept
+  `be_parcels.remove_parcel` aan.
 
 Geen YAML, geen `input_text`/`input_select`-helpers, geen aparte kaarten
 zoals Mushroom nodig — dit is puur de meegeleverde `be-parcels-card`.

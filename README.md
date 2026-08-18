@@ -26,7 +26,7 @@ eigen, gratis reverse-engineerde implementatie.
 |---|---|---|
 | bpost | België | ✅ werkend (best-effort, `track.bpost.cloud`) |
 | PostNL | Nederland | ✅ werkend (best-effort, `jouw.postnl.nl` — zie caveat in `carriers/postnl.py` over bestemmingslandcode) |
-| DPD | België | ⚠️ werkend, maar hogere onzekerheid — endpoint per analogie afgeleid van DPD Oostenrijk, niet zelf getest (zie caveat in `carriers/dpd.py`) |
+| DPD | België | ✅ werkend, gebaseerd op live-geteste HTML (`dpdgroup.com/be/mydpd/my-parcels/incoming`) — zie caveat in `carriers/dpd.py` over de aanname van 5 vaste stappen |
 | GLS | EU | 🚧 skelet |
 | DHL | Duitsland/intl. | 🚧 skelet |
 | Deutsche Post | Duitsland | 🚧 skelet |

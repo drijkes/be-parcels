@@ -3,8 +3,9 @@
 Eén polling-cyclus haalt de status van elk pakje op (met een kleine
 tussenpauze om vervoerders niet te bestoken) en bewaart het resultaat
 per trackingnummer. Bij elke wijziging in status wordt een HA-event
-gegooid, zodat je er automations op kan laten reageren (bv. een
-melding versturen zodra een pakje "out_for_delivery" wordt).
+gegooid (voor wie zelf een automation wil bouwen), én — als er een
+notify-doel is ingesteld via de integratie-opties — automatisch een
+melding verstuurd zodra een pakje "out_for_delivery" wordt.
 """
 from __future__ import annotations
 
@@ -12,13 +13,21 @@ import asyncio
 import logging
 from dataclasses import asdict
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .carriers import CARRIERS
 from .carriers.base import ParcelNotFoundError, ParcelProviderError, ParcelStatus
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, EVENT_STATUS_CHANGED, STATUS_NOT_FOUND
+from .const import (
+    CONF_NOTIFY_SERVICE,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    EVENT_STATUS_CHANGED,
+    STATUS_NOT_FOUND,
+    STATUS_OUT_FOR_DELIVERY,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -26,15 +35,16 @@ _LOGGER = logging.getLogger(__name__)
 class ParcelsCoordinator(DataUpdateCoordinator[dict[str, ParcelStatus]]):
     """Eén coordinator per hub-entry, houdt alle pakjes van die hub bij."""
 
-    def __init__(self, hass: HomeAssistant, entry_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{entry_id}",
+            name=f"{DOMAIN}_{entry.entry_id}",
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.hass = hass
-        self.entry_id = entry_id
+        self.entry = entry
+        self.entry_id = entry.entry_id
         # key = parcel_id (zelf gekozen unieke sleutel, zie __init__.py),
         # value = dict met carrier/tracking_number/postal_code/name
         self.parcels: dict[str, dict] = {}
@@ -79,27 +89,63 @@ class ParcelsCoordinator(DataUpdateCoordinator[dict[str, ParcelStatus]]):
             # endpoints, uit beleefdheid tegenover niet-officiële APIs.
             await asyncio.sleep(1)
 
-        self._fire_status_change_events(new_data)
+        await self._async_handle_status_changes(new_data)
         return new_data
 
-    def _fire_status_change_events(self, new_data: dict[str, ParcelStatus]) -> None:
+    async def _async_handle_status_changes(self, new_data: dict[str, ParcelStatus]) -> None:
         for parcel_id, status in new_data.items():
             old_status = self.data.get(parcel_id)
-            if old_status is None or old_status.status != status.status:
-                self.hass.bus.async_fire(
-                    EVENT_STATUS_CHANGED,
-                    {
-                        "parcel_id": parcel_id,
-                        "entry_id": self.entry_id,
-                        "old_status": old_status.status if old_status else None,
-                        **asdict(status),
-                    },
-                )
+            if old_status is not None and old_status.status == status.status:
+                continue  # geen wijziging, niets te doen
+
+            self.hass.bus.async_fire(
+                EVENT_STATUS_CHANGED,
+                {
+                    "parcel_id": parcel_id,
+                    "entry_id": self.entry_id,
+                    "old_status": old_status.status if old_status else None,
+                    **asdict(status),
+                },
+            )
+
+            if status.status == STATUS_OUT_FOR_DELIVERY:
+                await self._async_send_notification(status)
+
+    async def _async_send_notification(self, status: ParcelStatus) -> None:
+        notify_service = self.entry.options.get(CONF_NOTIFY_SERVICE, "").strip()
+        if not notify_service:
+            return  # geen notify-doel ingesteld, niets te versturen
+
+        try:
+            await self.hass.services.async_call(
+                "notify",
+                notify_service,
+                {
+                    "title": "📦 Pakje onderweg",
+                    "message": (
+                        f"{status.carrier}-pakje ({status.tracking_number}) is "
+                        f"bij de bezorger."
+                        + (
+                            f" Verwacht: {status.expected_delivery}."
+                            if status.expected_delivery
+                            else ""
+                        )
+                    ),
+                },
+                blocking=True,
+            )
+        except Exception:  # noqa: BLE001 - een foute notify-naam mag de rest niet breken
+            _LOGGER.exception(
+                "be_parcels: kon geen melding versturen via notify.%s — "
+                "controleer de naam bij de integratie-opties (Configureren).",
+                notify_service,
+            )
 
     async def async_add_parcel(self, parcel_id: str, parcel_cfg: dict) -> ParcelStatus:
         """Voeg een pakje toe en haal meteen de eerste status op."""
         self.parcels[parcel_id] = parcel_cfg
         status = await self.async_fetch_one(parcel_id, parcel_cfg)
+        await self._async_handle_status_changes({parcel_id: status})
         self.data[parcel_id] = status
         self.async_set_updated_data(self.data)
         return status

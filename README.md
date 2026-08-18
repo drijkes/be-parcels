@@ -55,31 +55,27 @@ zoals Mushroom nodig — dit is puur de meegeleverde `be-parcels-card`.
 
 ## Melding wanneer een bezorger onderweg is
 
-Dit hoort niet in de integratie zelf (meldingsvoorkeuren zijn persoonlijk),
-maar de integratie gooit wél een Home Assistant-event
-(`be_parcels_status_changed`) telkens de status van een pakje wijzigt. Maak
-hiermee een gewone automation, bv. via Instellingen → Automatiseringen →
-Nieuwe automatisering → In YAML bewerken:
+Dit zit nu **volledig in de integratie zelf** — geen aparte automation meer
+nodig:
 
-```yaml
-alias: "Melding: pakje onderweg"
-trigger:
-  - platform: event
-    event_type: be_parcels_status_changed
-    event_data:
-      status: out_for_delivery
-action:
-  - service: notify.mobile_app_JOUW_TELEFOON   # pas aan naar jouw notify-service
-    data:
-      title: "📦 Pakje onderweg"
-      message: >-
-        {{ trigger.event.data.carrier }}-pakje
-        ({{ trigger.event.data.tracking_number }}) is bij de bezorger.
-```
+1. Ga naar **Instellingen → Apparaten & diensten → Belgian Parcels →
+   Configureren**.
+2. Vul bij **Notify-service** de naam van je notify-doel in (bv.
+   `mobile_app_iphone_van_jan`). Je vindt die naam onder
+   Ontwikkelhulpmiddelen → Acties, zoek op "notify" — de service heet
+   `notify.<naam>`, hier vul je enkel `<naam>` in.
+3. Opslaan. Klaar.
 
-Vind je notify-service-naam onder Instellingen → Apparaten & diensten →
-Mobiele app → jouw toestel, of Ontwikkelhulpmiddelen → Acties, zoek op
-"notify".
+Zodra een pakje overgaat naar status `out_for_delivery` (de bezorger is
+onderweg), stuurt de integratie automatisch een melding via die
+notify-service — bij elk pakje, zonder verdere configuratie per pakje.
+
+Wil je toch zelf iets bouwen bovenop (bv. een andere melding per
+statuswijziging, of een lichtje laten knipperen)? De integratie blijft ook
+het event `be_parcels_status_changed` gooien bij élke statuswijziging (niet
+enkel `out_for_delivery`), met alle pakje-info in `trigger.event.data` —
+bruikbaar in een eigen automation als je verder wil dan de ingebouwde
+melding.
 
 ## Services (voor eigen automations/scripts)
 

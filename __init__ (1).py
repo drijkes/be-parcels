@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Zet de hub op: coordinator + reeds bekende pakjes + services + frontend-kaart."""
     await _async_register_frontend_card(hass)
 
-    coordinator = ParcelsCoordinator(hass, entry.entry_id)
+    coordinator = ParcelsCoordinator(hass, entry)
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
     # Bestaande pakjes (opgeslagen in entry.options) opnieuw inladen na herstart.

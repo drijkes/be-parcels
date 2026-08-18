@@ -56,12 +56,26 @@ class BeParcelsCard extends HTMLElement {
         const icon = icons[st.state] || icons.unknown;
         const desc = st.attributes.status_omschrijving || st.state;
         const name = st.attributes.friendly_name || st.entity_id;
+        const lastUpdate = st.attributes.laatste_update;
+        const lastUpdateText = lastUpdate
+          ? new Date(lastUpdate).toLocaleString("nl-BE", {
+              day: "2-digit",
+              month: "2-digit",
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : null;
         return `
           <div class="parcel-row" data-entity="${st.entity_id}">
             <ha-icon icon="${icon}"></ha-icon>
             <div class="parcel-text">
               <div class="parcel-name">${this._escape(name)}</div>
               <div class="parcel-status">${this._escape(desc)}</div>
+              ${
+                lastUpdateText
+                  ? `<div class="parcel-updated">Laatste update: ${this._escape(lastUpdateText)}</div>`
+                  : ""
+              }
             </div>
           </div>`;
       })
@@ -156,6 +170,7 @@ class BeParcelsCard extends HTMLElement {
         .parcel-row ha-icon { color: var(--secondary-text-color); }
         .parcel-name { font-size: 15px; }
         .parcel-status { font-size: 13px; color: var(--secondary-text-color); }
+        .parcel-updated { font-size: 11px; color: var(--disabled-text-color, var(--secondary-text-color)); }
         .empty { font-size: 14px; color: var(--secondary-text-color); padding: 8px 0; }
       </style>
       <ha-card>

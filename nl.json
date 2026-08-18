@@ -3,11 +3,25 @@
     "step": {
       "user": {
         "title": "Belgian Parcels toevoegen",
-        "description": "Dit maakt de hub aan. Voeg daarna pakjes toe via de service 'be_parcels.add_parcel' (bv. vanaf een dashboard-knop), niet hier."
+        "description": "Dit maakt de hub aan. Pakjes voeg je daarna toe via de meegeleverde dashboard-kaart, niet hier.",
+        "data": {
+          "notify_service": "Notify-service voor meldingen (optioneel, later aan te passen via 'Configureren')"
+        }
       }
     },
     "abort": {
       "already_configured": "Belgian Parcels is al ingesteld — je hebt maar één hub nodig."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Belgian Parcels instellingen",
+        "description": "Naam van de notify-service die een melding moet krijgen zodra een pakje 'onderweg met de bezorger' is (bv. mobile_app_iphone_van_jan). Leeg laten schakelt meldingen uit.",
+        "data": {
+          "notify_service": "Notify-service"
+        }
+      }
     }
   },
   "services": {

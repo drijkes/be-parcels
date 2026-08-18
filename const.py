@@ -9,6 +9,7 @@ CONF_TRACKING_NUMBER = "tracking_number"
 CONF_POSTAL_CODE = "postal_code"
 CONF_NAME = "name"
 CONF_PARCELS = "parcels"  # lijst van pakjes, opgeslagen in entry.options
+CONF_NOTIFY_SERVICE = "notify_service"  # bv. "mobile_app_iphone_van_jan"
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=20)
 

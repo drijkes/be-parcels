@@ -1,23 +1,25 @@
-"""Sensor platform: toont de status van één pakje."""
+"""Sensor platform: één sensor-entiteit per pakje, dynamisch aangemaakt
+wanneer be_parcels.add_parcel wordt aangeroepen (dus zonder herstart)."""
 from __future__ import annotations
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_CARRIER, CONF_NAME, CONF_TRACKING_NUMBER, DOMAIN, STATUS_UNKNOWN
-from .coordinator import ParcelCoordinator
+from .const import CONF_CARRIER, CONF_NAME, DOMAIN, STATUS_UNKNOWN
+from .coordinator import ParcelsCoordinator
 
-# Volgorde bepaalt hoe "ver" een pakje is; gebruikt voor icon-logica.
 _STATUS_ICONS = {
     "label_created": "mdi:package-variant-closed",
     "in_transit": "mdi:truck-delivery-outline",
     "out_for_delivery": "mdi:truck-fast-outline",
     "delivered": "mdi:package-variant-closed-check",
     "exception": "mdi:alert-circle-outline",
+    "not_found": "mdi:help-circle-outline",
     STATUS_UNKNOWN: "mdi:package-variant",
 }
 
@@ -25,32 +27,53 @@ _STATUS_ICONS = {
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    coordinator: ParcelCoordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ParcelSensor(coordinator, entry)])
+    coordinator: ParcelsCoordinator = hass.data[DOMAIN][entry.entry_id]
+
+    # Bij opstart: alle reeds bekende pakjes als entiteit toevoegen.
+    async_add_entities(
+        ParcelSensor(coordinator, entry, parcel_id) for parcel_id in coordinator.parcels
+    )
+
+    @callback
+    def _async_new_parcel(parcel_id: str) -> None:
+        async_add_entities([ParcelSensor(coordinator, entry, parcel_id)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{DOMAIN}_{entry.entry_id}_new_parcel", _async_new_parcel
+        )
+    )
 
 
-class ParcelSensor(CoordinatorEntity[ParcelCoordinator], SensorEntity):
-    """Eén sensor per getrackt pakje."""
+class ParcelSensor(CoordinatorEntity[ParcelsCoordinator], SensorEntity):
+    """Eén sensor per getrackt pakje binnen de hub."""
 
     _attr_has_entity_name = True
-    _attr_name = None  # gebruik de device-naam als entity-naam
+    _attr_name = None
 
-    def __init__(self, coordinator: ParcelCoordinator, entry: ConfigEntry) -> None:
+    def __init__(
+        self, coordinator: ParcelsCoordinator, entry: ConfigEntry, parcel_id: str
+    ) -> None:
         super().__init__(coordinator)
         self._entry = entry
-        self._attr_unique_id = entry.unique_id or entry.entry_id
+        self.parcel_id = parcel_id
+        self._attr_unique_id = f"{entry.entry_id}_{parcel_id}"
+        parcel_cfg = coordinator.parcels.get(parcel_id, {})
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
-            name=entry.data.get(CONF_NAME, entry.title),
-            manufacturer=entry.data[CONF_CARRIER],
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=parcel_cfg.get(CONF_NAME, parcel_id),
+            manufacturer=parcel_cfg.get(CONF_CARRIER, "onbekend"),
             model="Pakje",
         )
 
     @property
+    def available(self) -> bool:
+        return self.parcel_id in self.coordinator.data
+
+    @property
     def native_value(self) -> str:
-        if self.coordinator.data is None:
-            return STATUS_UNKNOWN
-        return self.coordinator.data.status
+        status = self.coordinator.data.get(self.parcel_id)
+        return status.status if status else STATUS_UNKNOWN
 
     @property
     def icon(self) -> str:
@@ -58,14 +81,14 @@ class ParcelSensor(CoordinatorEntity[ParcelCoordinator], SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict:
-        data = self.coordinator.data
-        if data is None:
+        status = self.coordinator.data.get(self.parcel_id)
+        if status is None:
             return {}
         return {
-            "vervoerder": data.carrier,
-            "trackingnummer": data.tracking_number,
-            "status_omschrijving": data.status_description,
-            "laatste_update": data.last_update,
-            "verwachte_levering": data.expected_delivery,
-            **data.extra,
+            "vervoerder": status.carrier,
+            "trackingnummer": status.tracking_number,
+            "status_omschrijving": status.status_description,
+            "laatste_update": status.last_update,
+            "verwachte_levering": status.expected_delivery,
+            **status.extra,
         }

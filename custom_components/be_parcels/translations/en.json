@@ -2,32 +2,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add a parcel",
-        "description": "Choose the carrier and enter the tracking number. Some carriers (like bpost) also require the recipient's postal code.",
-        "data": {
-          "carrier": "Carrier",
-          "tracking_number": "Tracking number",
-          "postal_code": "Postal code (only needed for some carriers)",
-          "name": "Display name (optional)"
-        }
+        "title": "Belgian Parcels toevoegen",
+        "description": "Dit maakt de hub aan. Voeg daarna pakjes toe via de service 'be_parcels.add_parcel' (bv. vanaf een dashboard-knop), niet hier."
       }
     },
-    "error": {
-      "not_found": "Tracking number not found at this carrier.",
-      "cannot_connect": "Could not reach the carrier. Try again later.",
-      "postal_code_required": "This carrier requires the recipient's postal code."
-    },
     "abort": {
-      "already_configured": "This parcel has already been added."
+      "already_configured": "Belgian Parcels is al ingesteld — je hebt maar één hub nodig."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Rename parcel",
-        "data": {
-          "name": "Display name"
-        }
+  "services": {
+    "add_parcel": {
+      "name": "Pakje toevoegen",
+      "description": "Voeg een pakje toe om te tracken.",
+      "fields": {
+        "carrier": { "name": "Vervoerder", "description": "Welke vervoerder bezorgt dit pakje." },
+        "tracking_number": { "name": "Trackingnummer", "description": "Het trackingnummer van het pakje." },
+        "postal_code": { "name": "Postcode", "description": "Postcode van de ontvanger (verplicht bij bpost)." },
+        "name": { "name": "Weergavenaam", "description": "Optionele herkenbare naam." }
+      }
+    },
+    "remove_parcel": {
+      "name": "Pakje verwijderen",
+      "description": "Stop met een pakje te tracken.",
+      "fields": {
+        "parcel_id": { "name": "Pakje-ID", "description": "De interne id van het pakje." }
       }
     }
   }

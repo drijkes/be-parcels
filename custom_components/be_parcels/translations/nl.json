@@ -2,32 +2,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "Pakje toevoegen",
-        "description": "Kies de vervoerder en vul het trackingnummer in. Sommige vervoerders (zoals bpost) hebben ook de postcode van de ontvanger nodig.",
-        "data": {
-          "carrier": "Vervoerder",
-          "tracking_number": "Trackingnummer",
-          "postal_code": "Postcode (alleen nodig bij sommige vervoerders)",
-          "name": "Weergavenaam (optioneel)"
-        }
+        "title": "Belgian Parcels toevoegen",
+        "description": "Dit maakt de hub aan. Voeg daarna pakjes toe via de service 'be_parcels.add_parcel' (bv. vanaf een dashboard-knop), niet hier."
       }
     },
-    "error": {
-      "not_found": "Trackingnummer niet gevonden bij deze vervoerder.",
-      "cannot_connect": "Kon geen verbinding maken met de vervoerder. Probeer later opnieuw.",
-      "postal_code_required": "Deze vervoerder heeft de postcode van de ontvanger nodig."
-    },
     "abort": {
-      "already_configured": "Dit pakje is al toegevoegd."
+      "already_configured": "Belgian Parcels is al ingesteld — je hebt maar één hub nodig."
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Pakje hernoemen",
-        "data": {
-          "name": "Weergavenaam"
-        }
+  "services": {
+    "add_parcel": {
+      "name": "Pakje toevoegen",
+      "description": "Voeg een pakje toe om te tracken.",
+      "fields": {
+        "carrier": { "name": "Vervoerder", "description": "Welke vervoerder bezorgt dit pakje." },
+        "tracking_number": { "name": "Trackingnummer", "description": "Het trackingnummer van het pakje." },
+        "postal_code": { "name": "Postcode", "description": "Postcode van de ontvanger (verplicht bij bpost)." },
+        "name": { "name": "Weergavenaam", "description": "Optionele herkenbare naam." }
+      }
+    },
+    "remove_parcel": {
+      "name": "Pakje verwijderen",
+      "description": "Stop met een pakje te tracken.",
+      "fields": {
+        "parcel_id": { "name": "Pakje-ID", "description": "De interne id van het pakje." }
       }
     }
   }

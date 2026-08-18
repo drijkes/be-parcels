@@ -14,11 +14,62 @@ aankondiging stoppen als de vervoerder zijn website aanpast.
 
 ## Status per vervoerder
 
-| Vervoerder | Status | Opmerking |
+De dropdown in de kaart toont alle onderstaande Europese vervoerders.
+**bpost** werkt volledig gratis en rechtstreeks. Alle andere vervoerders
+lopen via de **17TRACK-aggregator** — één gratis API-key geeft toegang tot
+al die vervoerders tegelijk, in plaats van 21 aparte breekbare
+scraping-implementaties.
+
+### 17TRACK instellen (nodig voor alles behalve bpost)
+
+1. Maak een gratis account op [17track.net](https://www.17track.net) of
+   [api.17track.net](https://api.17track.net).
+2. Genereer in het dashboard een API-key.
+3. Vul die in bij **Instellingen → Apparaten & diensten → Belgian Parcels
+   → Configureren**.
+
+Zonder key geven deze vervoerders een duidelijke foutmelding in de kaart
+i.p.v. stil te falen.
+
+| Vervoerder | Land/regio | 17TRACK-code |
 |---|---|---|
-| bpost | ✅ werkend (best-effort) | Gebruikt `track.bpost.cloud`. Community-gereverse-engineerd, niet officieel gedocumenteerd. |
-| DPD | 🚧 skelet | Zie `carriers/dpd.py`. |
-| GLS | 🚧 skelet | Zie `carriers/gls.py`. |
+| bpost | België | — (eigen, gratis implementatie) |
+| DPD | België | 100321 |
+| GLS | EU (algemeen) | 100005 |
+| PostNL | Nederland | 14041 (vereist ook postcode) |
+| DHL Paket | Duitsland | 7041 |
+| Deutsche Post | Duitsland | 7044 |
+| La Poste / Colissimo | Frankrijk | 6051 |
+| Chronopost | Frankrijk | 100273 |
+| Mondial Relay | Frankrijk | 100304 |
+| UPS | internationaal | 100002 |
+| FedEx | internationaal | 100003 |
+| Royal Mail | Verenigd Koninkrijk | 11031 |
+| Evri (Hermes) | Verenigd Koninkrijk | 100331 |
+| An Post | Ierland | 9051 |
+| Poste Italiane | Italië | 9071 |
+| Correos | Spanje | 19181 |
+| CTT | Portugal | 16101 |
+| Österreichische Post | Oostenrijk | 1161 |
+| PostNord | Zweden | 19241 |
+| Poczta Polska | Polen | 16081 |
+| InPost | Polen | 100043 |
+| Swiss Post | Zwitserland | 19251 |
+
+**Let op — enkele caveats:**
+- **DPD** en **PostNord** hebben geen generieke pan-Europese code bij
+  17TRACK; hierboven staat de Belgische resp. Zweedse variant. Verstuur je
+  DPD-pakjes vanuit een ander land, of PostNord vanuit Denemarken? Pas dan
+  `carrier_code` aan in `carriers/dpd.py` / `carriers/postnord.py` (zie de
+  volledige lijst op
+  [apicarrier.all.json](https://res.17track.net/asset/carrier/info/apicarrier.all.json)).
+- **PostNord dekt enkel Zweden en Denemarken** — Noorwegen gebruikt Bring,
+  Finland gebruikt Posti (dat zijn aparte vervoerders bij 17TRACK).
+- De statusparsing in `carriers/aggregator.py` is gebaseerd op 17TRACK's
+  officiële documentatie maar niet getest tegen een live response — werkt
+  de status niet correct, zet dan tijdelijk debug-logging aan (zie verderop)
+  en pas `_parse_track_info()` aan op basis van wat je account echt
+  teruggeeft.
 
 ## Installatie via HACS
 

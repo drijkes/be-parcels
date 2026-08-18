@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add a parcel",
+        "description": "Choose the carrier and enter the tracking number. Some carriers (like bpost) also require the recipient's postal code.",
+        "data": {
+          "carrier": "Carrier",
+          "tracking_number": "Tracking number",
+          "postal_code": "Postal code (only needed for some carriers)",
+          "name": "Display name (optional)"
+        }
+      }
+    },
+    "error": {
+      "not_found": "Tracking number not found at this carrier.",
+      "cannot_connect": "Could not reach the carrier. Try again later.",
+      "postal_code_required": "This carrier requires the recipient's postal code."
+    },
+    "abort": {
+      "already_configured": "This parcel has already been added."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Rename parcel",
+        "data": {
+          "name": "Display name"
+        }
+      }
+    }
+  }
+}

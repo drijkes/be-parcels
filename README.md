@@ -108,6 +108,24 @@ Elke vervoerder is een losse Python-klasse in
    `www/be-parcels-card.js` (`<option value="...">`).
 5. Herstart Home Assistant.
 
+## Problemen met de dashboard-kaart oplossen
+
+Verschijnt de kaart niet in de kaart-editor? Zet debug-logging aan om de
+exacte oorzaak te zien. Voeg toe aan `configuration.yaml`:
+
+```yaml
+logger:
+  default: info
+  logs:
+    custom_components.be_parcels: debug
+```
+
+Herstart HA en kijk in Instellingen → Systeem → Logs naar regels die
+beginnen met `be_parcels:`. Vanaf versie 0.3.0 logt de integratie expliciet
+wanneer de kaart-registratie mislukt (bv. ontbrekend bestand, of de
+frontend-component was nog niet klaar) — dat stond hiervoor soms onder een
+andere loggernaam en was daardoor moeilijk terug te vinden.
+
 ## Sensor-attributen
 
 Elke pakje-sensor (`sensor.<naam>`) heeft als state één van:

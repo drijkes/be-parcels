@@ -1,27 +1,27 @@
 class BeParcelsCard extends HTMLElement {
   static CARRIERS = [
-    { slug: "bpost", label: "bpost (België)", implemented: true, via17track: false },
-    { slug: "dpd", label: "DPD (BE)", implemented: true, via17track: true },
-    { slug: "gls", label: "GLS (EU)", implemented: true, via17track: true },
-    { slug: "postnl", label: "PostNL (Nederland)", implemented: true, via17track: false },
-    { slug: "dhl", label: "DHL (Duitsland/intl.)", implemented: true, via17track: true },
-    { slug: "deutsche_post", label: "Deutsche Post (Duitsland)", implemented: true, via17track: true },
-    { slug: "la_poste", label: "La Poste / Colissimo (Frankrijk)", implemented: true, via17track: true },
-    { slug: "chronopost", label: "Chronopost (Frankrijk)", implemented: true, via17track: true },
-    { slug: "mondial_relay", label: "Mondial Relay (FR/BE)", implemented: true, via17track: true },
-    { slug: "ups", label: "UPS (internationaal)", implemented: true, via17track: true },
-    { slug: "fedex", label: "FedEx (internationaal)", implemented: true, via17track: true },
-    { slug: "royal_mail", label: "Royal Mail (VK)", implemented: true, via17track: true },
-    { slug: "evri", label: "Evri / Hermes (VK)", implemented: true, via17track: true },
-    { slug: "an_post", label: "An Post (Ierland)", implemented: true, via17track: true },
-    { slug: "poste_italiane", label: "Poste Italiane (Italië)", implemented: true, via17track: true },
-    { slug: "correos", label: "Correos (Spanje)", implemented: true, via17track: true },
-    { slug: "ctt", label: "CTT (Portugal)", implemented: true, via17track: true },
-    { slug: "austrian_post", label: "Österreichische Post (Oostenrijk)", implemented: true, via17track: true },
-    { slug: "postnord", label: "PostNord (SE/DK)", implemented: true, via17track: true },
-    { slug: "poczta_polska", label: "Poczta Polska (Polen)", implemented: true, via17track: true },
-    { slug: "inpost", label: "InPost (Polen)", implemented: true, via17track: true },
-    { slug: "swiss_post", label: "Swiss Post (Zwitserland)", implemented: true, via17track: true },
+    { slug: "bpost", label: "bpost (België)", implemented: true },
+    { slug: "dpd", label: "DPD (EU) — niet haalbaar, zie README", implemented: false },
+    { slug: "gls", label: "GLS (EU)", implemented: false },
+    { slug: "postnl", label: "PostNL (Nederland)", implemented: true },
+    { slug: "dhl", label: "DHL (Duitsland/intl.)", implemented: false },
+    { slug: "deutsche_post", label: "Deutsche Post (Duitsland)", implemented: false },
+    { slug: "la_poste", label: "La Poste / Colissimo (Frankrijk)", implemented: false },
+    { slug: "chronopost", label: "Chronopost (Frankrijk)", implemented: false },
+    { slug: "mondial_relay", label: "Mondial Relay (FR/BE)", implemented: false },
+    { slug: "ups", label: "UPS (internationaal)", implemented: false },
+    { slug: "fedex", label: "FedEx (internationaal)", implemented: false },
+    { slug: "royal_mail", label: "Royal Mail (VK)", implemented: false },
+    { slug: "evri", label: "Evri / Hermes (VK)", implemented: false },
+    { slug: "an_post", label: "An Post (Ierland)", implemented: false },
+    { slug: "poste_italiane", label: "Poste Italiane (Italië)", implemented: false },
+    { slug: "correos", label: "Correos (Spanje)", implemented: false },
+    { slug: "ctt", label: "CTT (Portugal)", implemented: false },
+    { slug: "austrian_post", label: "Österreichische Post (Oostenrijk)", implemented: false },
+    { slug: "postnord", label: "PostNord (SE/DK)", implemented: false },
+    { slug: "poczta_polska", label: "Poczta Polska (Polen)", implemented: false },
+    { slug: "inpost", label: "InPost (Polen)", implemented: false },
+    { slug: "swiss_post", label: "Swiss Post (Zwitserland)", implemented: false },
   ];
 
   static POSTAL_CODE_STORAGE_KEY = "be_parcels_last_postal_code";
@@ -349,10 +349,8 @@ class BeParcelsCard extends HTMLElement {
         </div>
         ${
           !BeParcelsCard.CARRIERS.find((c) => c.slug === this._carrier)?.implemented
-            ? `<div class="warning">Deze vervoerder werkt momenteel niet — toevoegen zal een foutmelding geven. Zie README.md voor details.</div>`
-            : BeParcelsCard.CARRIERS.find((c) => c.slug === this._carrier)?.via17track
-              ? `<div class="warning">Loopt via 17TRACK's gratis publieke endpoint — niet live getest, kan een foutmelding geven als het geblokkeerd wordt (zoals bij DPD gebeurde).</div>`
-              : ""
+            ? `<div class="warning">Deze vervoerder werkt niet — toevoegen zal een foutmelding geven. Zie README.md voor details.</div>`
+            : ""
         }
 
         ${

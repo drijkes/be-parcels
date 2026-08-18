@@ -104,7 +104,7 @@ class SeventeenTrackFreeCarrier(ParcelCarrier):
             {"numbers": [tracking_number]},
         ]
 
-        last_raw_text = ""
+        attempt_log: list[str] = []
         async with aiohttp.ClientSession(cookie_jar=aiohttp.CookieJar()) as session:
             try:
                 async with session.get(
@@ -123,16 +123,14 @@ class SeventeenTrackFreeCarrier(ParcelCarrier):
                         timeout=aiohttp.ClientTimeout(total=15),
                     ) as resp:
                         if resp.status != 200:
-                            raise ParcelProviderError(
-                                f"17TRACK (gratis endpoint) gaf status {resp.status} terug"
-                            )
+                            attempt_log.append(f"{body} -> HTTP {resp.status}")
+                            continue
                         raw_text = await resp.text()
-                except ParcelProviderError:
-                    raise
                 except Exception as err:  # noqa: BLE001
-                    raise ParcelProviderError(str(err)) from err
+                    attempt_log.append(f"{body} -> fout: {err}")
+                    continue
 
-                last_raw_text = raw_text
+                attempt_log.append(f"{body} -> {raw_text[:200]}")
                 try:
                     data: dict[str, Any] = json.loads(raw_text)
                 except ValueError:
@@ -146,8 +144,8 @@ class SeventeenTrackFreeCarrier(ParcelCarrier):
 
         _LOGGER.warning(
             "17TRACK (gratis endpoint): geen enkele aanvraagvorm werkte voor "
-            "%s. Laatste ruwe respons (eerste 500 tekens): %s",
-            tracking_number, last_raw_text[:500],
+            "%s. Alle pogingen:\n%s",
+            tracking_number, "\n".join(attempt_log),
         )
         raise ParcelNotFoundError(tracking_number)
 

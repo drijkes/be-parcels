@@ -14,29 +14,35 @@ aankondiging stoppen als de vervoerder zijn website aanpast.
 
 ## Status per vervoerder
 
-Alle 22 vervoerders werken nu, op twee manieren:
+**bpost en PostNL werken**, gratis en rechtstreeks (eigen implementatie
+per vervoerder, geen account/API-key nodig). De overige 20 vervoerders
+zijn **niet haalbaar gebleken** zonder betaalde dienst — twee sporen
+zijn grondig uitgeprobeerd en beide liepen dood:
 
-- **bpost, PostNL**: eigen, rechtstreekse gratis implementatie (zoals
-  hierboven beschreven).
-- **DPD + de overige 19**: via **17TRACK's gratis publieke website-
-  endpoint** (`t.17track.net`) — géén account, géén API-key, géén quota.
-  Dit is NIET de betaalde 17TRACK-ontwikkelaars-API; het is het endpoint
-  dat hun eigen gratis trackingpagina zelf gebruikt, gebaseerd op de
-  open-source bibliotheek [py17track](https://github.com/bachya/py17track).
-  Zie `carriers/seventeentrack_free.py` voor de implementatie en caveats.
+1. **Rechtstreeks bij de vervoerder** (zoals bij bpost/PostNL) — voor
+   DPD specifiek bevestigd geblokkeerd door Cloudflare (403), ook met
+   volledige browser-headers en een opwarmverzoek voor cookies.
+2. **Via 17TRACK's gratis publieke website-endpoint**
+   (`t.17track.net/restapi/track`, gebaseerd op de open-source
+   bibliotheek [py17track](https://github.com/bachya/py17track)) — vier
+   verschillende aanvraagvormen geprobeerd, allemaal identiek
+   afgewezen. Dat wijst op dezelfde soort blokkade die al vóór het
+   bekijken van de velden toeslaat, vermoedelijk een
+   fingerprinting-controle die JavaScript-uitvoering vereist — iets wat
+   een simpel server-side HTTP-verzoek (zoals Home Assistant er een
+   doet) fundamenteel niet kan nabootsen.
 
-  ⚠️ **Belangrijke kanttekening**: de auteur van py17track had deze
-  functionaliteit zelf uitgeschakeld ("disabled until a workaround can
-  be found") — vermoedelijk dezelfde soort botbescherming als we bij DPD
-  rechtstreeks tegenkwamen. Deze module is **niet live getest** vanuit
-  de omgeving waarin dit gebouwd is. Werkt het niet? Dat geeft een
-  duidelijke foutmelding in de kaart, geen stille storing.
+De code voor beide pogingen (`carriers/seventeentrack_free.py` en de
+per-vervoerder-modules) staat nog in de repo, met uitleg in de
+docstrings, mocht iemand dit ooit verder willen uitpluizen — maar
+verwacht geen quick fix zonder een headless browser of een betaalde
+"unlocker"-dienst.
 
-| Vervoerder | Methode |
+| Vervoerder | Status |
 |---|---|
-| bpost | Eigen, rechtstreeks (`track.bpost.cloud`) |
-| PostNL | Eigen, rechtstreeks (`jouw.postnl.nl`) |
-| DPD, GLS, DHL, Deutsche Post, La Poste/Colissimo, Chronopost, Mondial Relay, UPS, FedEx, Royal Mail, Evri, An Post, Poste Italiane, Correos, CTT, Österreichische Post, PostNord, Poczta Polska, InPost, Swiss Post | 17TRACK gratis publiek endpoint |
+| bpost | ✅ werkt (eigen, rechtstreeks) |
+| PostNL | ✅ werkt (eigen, rechtstreeks) |
+| DPD, GLS, DHL, Deutsche Post, La Poste/Colissimo, Chronopost, Mondial Relay, UPS, FedEx, Royal Mail, Evri, An Post, Poste Italiane, Correos, CTT, Österreichische Post, PostNord, Poczta Polska, InPost, Swiss Post | ❌ niet haalbaar gebleken (botbescherming) |
 
 ## Installatie via HACS
 

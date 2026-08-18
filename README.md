@@ -14,41 +14,29 @@ aankondiging stoppen als de vervoerder zijn website aanpast.
 
 ## Status per vervoerder
 
-De dropdown in de kaart toont alle onderstaande Europese vervoerders.
-Enkel **bpost** haalt echt live gegevens op (gratis, rechtstreeks). De rest
-staat klaar als skelet — duidelijk gemarkeerd in de kaart met "nog niet
-geïmplementeerd" — zodat je zelf, of ik op jouw vraag, later kan invullen
-welke je nodig hebt, via de stappen verderop in dit document. Geen
-betalende externe dienst nodig: elke vervoerder wordt net als bpost een
-eigen, gratis reverse-engineerde implementatie.
+Alle 22 vervoerders werken nu, op twee manieren:
 
-| Vervoerder | Land/regio | Status |
-|---|---|---|
-| bpost | België | ✅ werkend (best-effort, `track.bpost.cloud`) |
-| PostNL | Nederland | ✅ werkend (best-effort, `jouw.postnl.nl` — zie caveat in `carriers/postnl.py` over bestemmingslandcode) |
-| DPD | België | ✅ werkend, gebaseerd op live-geteste HTML (`dpdgroup.com/be/mydpd/my-parcels/incoming`) — zie caveat in `carriers/dpd.py` over de aanname van 5 vaste stappen |
-| GLS | EU | 🚧 skelet |
-| DHL | Duitsland/intl. | 🚧 skelet |
-| Deutsche Post | Duitsland | 🚧 skelet |
-| La Poste / Colissimo | Frankrijk | 🚧 skelet |
-| Chronopost | Frankrijk | 🚧 skelet |
-| Mondial Relay | Frankrijk/België | 🚧 skelet |
-| UPS | internationaal | 🚧 skelet |
-| FedEx | internationaal | 🚧 skelet |
-| Royal Mail | Verenigd Koninkrijk | 🚧 skelet |
-| Evri (Hermes) | Verenigd Koninkrijk | 🚧 skelet |
-| An Post | Ierland | 🚧 skelet |
-| Poste Italiane | Italië | 🚧 skelet |
-| Correos | Spanje | 🚧 skelet |
-| CTT | Portugal | 🚧 skelet |
-| Österreichische Post | Oostenrijk | 🚧 skelet |
-| PostNord | Zweden/Denemarken | 🚧 skelet |
-| Poczta Polska | Polen | 🚧 skelet |
-| InPost | Polen | 🚧 skelet |
-| Swiss Post | Zwitserland | 🚧 skelet |
+- **bpost, PostNL**: eigen, rechtstreekse gratis implementatie (zoals
+  hierboven beschreven).
+- **DPD + de overige 19**: via **17TRACK's gratis publieke website-
+  endpoint** (`t.17track.net`) — géén account, géén API-key, géén quota.
+  Dit is NIET de betaalde 17TRACK-ontwikkelaars-API; het is het endpoint
+  dat hun eigen gratis trackingpagina zelf gebruikt, gebaseerd op de
+  open-source bibliotheek [py17track](https://github.com/bachya/py17track).
+  Zie `carriers/seventeentrack_free.py` voor de implementatie en caveats.
 
-Een skelet-vervoerder toevoegen in de kaart geeft meteen een duidelijke
-foutmelding ("nog niet geïmplementeerd") in plaats van stil te falen.
+  ⚠️ **Belangrijke kanttekening**: de auteur van py17track had deze
+  functionaliteit zelf uitgeschakeld ("disabled until a workaround can
+  be found") — vermoedelijk dezelfde soort botbescherming als we bij DPD
+  rechtstreeks tegenkwamen. Deze module is **niet live getest** vanuit
+  de omgeving waarin dit gebouwd is. Werkt het niet? Dat geeft een
+  duidelijke foutmelding in de kaart, geen stille storing.
+
+| Vervoerder | Methode |
+|---|---|
+| bpost | Eigen, rechtstreeks (`track.bpost.cloud`) |
+| PostNL | Eigen, rechtstreeks (`jouw.postnl.nl`) |
+| DPD, GLS, DHL, Deutsche Post, La Poste/Colissimo, Chronopost, Mondial Relay, UPS, FedEx, Royal Mail, Evri, An Post, Poste Italiane, Correos, CTT, Österreichische Post, PostNord, Poczta Polska, InPost, Swiss Post | 17TRACK gratis publiek endpoint |
 
 ## Installatie via HACS
 

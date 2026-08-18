@@ -1,0 +1,12 @@
+{
+  "domain": "be_parcels",
+  "name": "Belgian Parcels",
+  "codeowners": ["@jouw_github_username"],
+  "config_flow": true,
+  "dependencies": ["http", "frontend"],
+  "documentation": "https://github.com/jouw_github_username/be_parcels",
+  "issue_tracker": "https://github.com/jouw_github_username/be_parcels/issues",
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "version": "0.15.0"
+}

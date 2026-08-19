@@ -54,6 +54,11 @@ def _slugify_id(carrier: str, tracking_number: str) -> str:
 
 
 FRONTEND_URL_PATH = "/be_parcels_static/be-parcels-card.js"
+# Cache-busting: zonder versienummer in de URL blijven browsers ÉN
+# proxies/CDN's het bestand agressief cachen, ook na een update van de
+# integratie. Dit handmatig ophogen bij elke wijziging aan de kaart-JS
+# dwingt een verse download af, ongeacht caching ergens tussenin.
+FRONTEND_JS_CACHE_VERSION = "34"
 
 
 async def _async_register_frontend_card(hass: HomeAssistant) -> None:
@@ -63,7 +68,7 @@ async def _async_register_frontend_card(hass: HomeAssistant) -> None:
     voegen: de kaart is meteen na herstart beschikbaar in de
     kaart-editor onder "Belgian Parcels".
     """
-    if hass.data.get(f"{DOMAIN}_frontend_registered"):
+    if hass.data.get(f"{DOMAIN}_frontend_registered") == FRONTEND_JS_CACHE_VERSION:
         return
 
     js_path = str(pathlib.Path(__file__).parent / "www" / "be-parcels-card.js")
@@ -77,6 +82,8 @@ async def _async_register_frontend_card(hass: HomeAssistant) -> None:
         )
         return
 
+    versioned_url = f"{FRONTEND_URL_PATH}?v={FRONTEND_JS_CACHE_VERSION}"
+
     try:
         try:
             # Home Assistant >= 2024.7
@@ -89,7 +96,7 @@ async def _async_register_frontend_card(hass: HomeAssistant) -> None:
             # Oudere Home Assistant-versies
             hass.http.register_static_path(FRONTEND_URL_PATH, js_path, False)
 
-        add_extra_js_url(hass, FRONTEND_URL_PATH)
+        add_extra_js_url(hass, versioned_url)
     except Exception:  # noqa: BLE001 - we willen dit gegarandeerd loggen
         _LOGGER.exception(
             "be_parcels: registreren van de dashboard-kaart is mislukt. "
@@ -98,8 +105,8 @@ async def _async_register_frontend_card(hass: HomeAssistant) -> None:
         )
         return
 
-    hass.data[f"{DOMAIN}_frontend_registered"] = True
-    _LOGGER.debug("be_parcels: dashboard-kaart geregistreerd op %s", FRONTEND_URL_PATH)
+    hass.data[f"{DOMAIN}_frontend_registered"] = FRONTEND_JS_CACHE_VERSION
+    _LOGGER.debug("be_parcels: dashboard-kaart geregistreerd op %s", versioned_url)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

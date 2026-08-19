@@ -73,27 +73,24 @@ class _ParcelsCardView(HomeAssistantView):
     vingers ziet, maar wat strengere ingebouwde browsers — zoals die in
     de Home Assistant companion-app — kunnen weigeren uit te voeren.
     Deze eigen view zet de header expliciet, ongeacht systeeminstellingen.
+
+    De inhoud wordt ÉÉN KEER ingelezen bij registratie (niet per
+    aanvraag) en in het geheugen bewaard — simpeler en robuuster dan
+    per request opnieuw van schijf te moeten lezen.
     """
 
     url = FRONTEND_URL_PATH
     name = "be_parcels:card_js"
     requires_auth = False
 
-    def __init__(self, js_path: str) -> None:
-        self._js_path = js_path
+    def __init__(self, content: str) -> None:
+        self._content = content
 
     async def get(self, request):
         from aiohttp import web
 
-        try:
-            content = await request.app["hass"].async_add_executor_job(
-                pathlib.Path(self._js_path).read_text, "utf-8"
-            )
-        except OSError as err:
-            return web.Response(status=404, text=f"be_parcels card niet gevonden: {err}")
-
         return web.Response(
-            text=content,
+            text=self._content,
             content_type="application/javascript",
             charset="utf-8",
             headers={"Cache-Control": "public, max-age=31536000, immutable"},
@@ -128,7 +125,10 @@ async def _async_register_frontend_card(hass: HomeAssistant) -> None:
     versioned_url = f"{FRONTEND_URL_PATH}?v={FRONTEND_JS_CACHE_VERSION}"
 
     try:
-        hass.http.register_view(_ParcelsCardView(js_path))
+        js_content = await hass.async_add_executor_job(
+            pathlib.Path(js_path).read_text, "utf-8"
+        )
+        hass.http.register_view(_ParcelsCardView(js_content))
         add_extra_js_url(hass, versioned_url)
     except Exception:  # noqa: BLE001 - we willen dit gegarandeerd loggen
         _LOGGER.exception(

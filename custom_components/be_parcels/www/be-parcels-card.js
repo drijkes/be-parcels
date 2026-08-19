@@ -1,30 +1,4 @@
 class BeParcelsCard extends HTMLElement {
-  static CARRIERS = [
-    { slug: "bpost", label: "bpost (België)", implemented: true },
-    { slug: "dpd", label: "DPD (EU) — niet haalbaar, zie README", implemented: false },
-    { slug: "gls", label: "GLS (EU)", implemented: false },
-    { slug: "postnl", label: "PostNL (Nederland)", implemented: true },
-    { slug: "dhl", label: "DHL (Duitsland/intl.)", implemented: false },
-    { slug: "deutsche_post", label: "Deutsche Post (Duitsland)", implemented: false },
-    { slug: "la_poste", label: "La Poste / Colissimo (Frankrijk)", implemented: false },
-    { slug: "chronopost", label: "Chronopost (Frankrijk)", implemented: false },
-    { slug: "mondial_relay", label: "Mondial Relay (FR/BE)", implemented: false },
-    { slug: "ups", label: "UPS (internationaal)", implemented: false },
-    { slug: "fedex", label: "FedEx (internationaal)", implemented: false },
-    { slug: "royal_mail", label: "Royal Mail (VK)", implemented: false },
-    { slug: "evri", label: "Evri / Hermes (VK)", implemented: false },
-    { slug: "an_post", label: "An Post (Ierland)", implemented: false },
-    { slug: "poste_italiane", label: "Poste Italiane (Italië)", implemented: false },
-    { slug: "correos", label: "Correos (Spanje)", implemented: false },
-    { slug: "ctt", label: "CTT (Portugal)", implemented: false },
-    { slug: "austrian_post", label: "Österreichische Post (Oostenrijk)", implemented: false },
-    { slug: "postnord", label: "PostNord (SE/DK)", implemented: false },
-    { slug: "poczta_polska", label: "Poczta Polska (Polen)", implemented: false },
-    { slug: "inpost", label: "InPost (Polen)", implemented: false },
-    { slug: "swiss_post", label: "Swiss Post (Zwitserland)", implemented: false },
-  ];
-
-  static POSTAL_CODE_STORAGE_KEY = "be_parcels_last_postal_code";
 
   setConfig(config) {
     this._config = config || {};
@@ -41,7 +15,7 @@ class BeParcelsCard extends HTMLElement {
   _loadLastPostalCode() {
     try {
       return localStorage.getItem(BeParcelsCard.POSTAL_CODE_STORAGE_KEY) || "";
-    } catch {
+    } catch (err) {
       return ""; // localStorage niet beschikbaar (bv. privénavigatie)
     }
   }
@@ -49,7 +23,7 @@ class BeParcelsCard extends HTMLElement {
   _saveLastPostalCode(value) {
     try {
       if (value) localStorage.setItem(BeParcelsCard.POSTAL_CODE_STORAGE_KEY, value);
-    } catch {
+    } catch (err) {
       // stil negeren, is puur een comfort-functie
     }
   }
@@ -67,11 +41,6 @@ class BeParcelsCard extends HTMLElement {
   //  "required" -> veld verplicht, blokkeert versturen als leeg (bpost, PostNL)
   //  "optional" -> veld zichtbaar maar niet verplicht, verbetert nauwkeurigheid (DPD)
   //  niet vermeld -> veld niet getoond
-  static POSTAL_CODE_MODE = {
-    bpost: "required",
-    postnl: "required",
-  };
-
   _postalCodeMode(carrier) {
     return BeParcelsCard.POSTAL_CODE_MODE[carrier] || null;
   }
@@ -145,6 +114,7 @@ class BeParcelsCard extends HTMLElement {
         const desc = st.attributes.status_omschrijving || st.state;
         const lastUpdate = st.attributes.laatste_update;
         const lastUpdateText = this._formatDate(lastUpdate);
+        const trackingUrl = st.attributes.tracking_url;
         return `
           <div class="parcel-row" data-entity="${st.entity_id}">
             <ha-icon icon="${icon}"></ha-icon>
@@ -154,6 +124,11 @@ class BeParcelsCard extends HTMLElement {
               ${
                 lastUpdateText
                   ? `<div class="parcel-updated">Laatste update: ${this._escape(lastUpdateText)}</div>`
+                  : ""
+              }
+              ${
+                trackingUrl
+                  ? `<a class="parcel-link" href="${this._escape(trackingUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Bekijk op vervoerder-site ↗</a>`
                   : ""
               }
             </div>
@@ -323,6 +298,11 @@ class BeParcelsCard extends HTMLElement {
         .parcel-name { font-size: 15px; }
         .parcel-status { font-size: 13px; color: var(--secondary-text-color); }
         .parcel-updated { font-size: 11px; color: var(--disabled-text-color, var(--secondary-text-color)); }
+        .parcel-link {
+          display: inline-block; font-size: 12px; margin-top: 2px;
+          color: var(--primary-color); text-decoration: none;
+        }
+        .parcel-link:hover { text-decoration: underline; }
         .empty { font-size: 14px; color: var(--secondary-text-color); padding: 8px 0; }
       </style>
       <ha-card>
@@ -348,9 +328,22 @@ class BeParcelsCard extends HTMLElement {
           </select>
         </div>
         ${
-          !BeParcelsCard.CARRIERS.find((c) => c.slug === this._carrier)?.implemented
-            ? `<div class="warning">Deze vervoerder werkt niet — toevoegen zal een foutmelding geven. Zie README.md voor details.</div>`
-            : ""
+          (function (self) {
+            var found = null;
+            for (var i = 0; i < BeParcelsCard.CARRIERS.length; i++) {
+              if (BeParcelsCard.CARRIERS[i].slug === self._carrier) {
+                found = BeParcelsCard.CARRIERS[i];
+                break;
+              }
+            }
+            if (!found || !found.implemented) {
+              return '<div class="warning">Deze vervoerder werkt niet — toevoegen zal een foutmelding geven. Zie README.md voor details.</div>';
+            }
+            if (found.needsKey) {
+              return '<div class="warning">Vereist een gratis Track123 API-key, in te stellen bij Instellingen → Belgian Parcels → Configureren.</div>';
+            }
+            return "";
+          })(this)
         }
 
         ${
@@ -403,6 +396,42 @@ class BeParcelsCard extends HTMLElement {
     this._updateParcelList();
   }
 }
+
+// Als gewone (niet-static-class-field) toewijzingen gedefinieerd voor
+// maximale compatibiliteit — sommige ingebouwde app-browsers (bv. de
+// Home Assistant companion-app op oudere toestellen) ondersteunen de
+// nieuwere "static veld"-klassensyntax niet.
+BeParcelsCard.POSTAL_CODE_STORAGE_KEY = "be_parcels_last_postal_code";
+
+BeParcelsCard.POSTAL_CODE_MODE = {
+  bpost: "required",
+  postnl: "required",
+};
+
+BeParcelsCard.CARRIERS = [
+  { slug: "bpost", label: "bpost (België)", implemented: true, needsKey: false },
+  { slug: "dpd", label: "DPD", implemented: true, needsKey: true },
+  { slug: "gls", label: "GLS (EU)", implemented: true, needsKey: true },
+  { slug: "postnl", label: "PostNL (Nederland)", implemented: true, needsKey: false },
+  { slug: "dhl", label: "DHL (Duitsland/intl.)", implemented: true, needsKey: true },
+  { slug: "deutsche_post", label: "Deutsche Post (Duitsland)", implemented: true, needsKey: true },
+  { slug: "la_poste", label: "La Poste / Colissimo (Frankrijk)", implemented: true, needsKey: true },
+  { slug: "chronopost", label: "Chronopost (Frankrijk)", implemented: true, needsKey: true },
+  { slug: "mondial_relay", label: "Mondial Relay (FR/BE)", implemented: true, needsKey: true },
+  { slug: "ups", label: "UPS (internationaal)", implemented: true, needsKey: true },
+  { slug: "fedex", label: "FedEx (internationaal)", implemented: true, needsKey: true },
+  { slug: "royal_mail", label: "Royal Mail (VK)", implemented: true, needsKey: true },
+  { slug: "evri", label: "Evri / Hermes (VK)", implemented: true, needsKey: true },
+  { slug: "an_post", label: "An Post (Ierland)", implemented: true, needsKey: true },
+  { slug: "poste_italiane", label: "Poste Italiane (Italië)", implemented: true, needsKey: true },
+  { slug: "correos", label: "Correos (Spanje)", implemented: true, needsKey: true },
+  { slug: "ctt", label: "CTT (Portugal)", implemented: true, needsKey: true },
+  { slug: "austrian_post", label: "Österreichische Post (Oostenrijk)", implemented: true, needsKey: true },
+  { slug: "postnord", label: "PostNord (SE/DK)", implemented: true, needsKey: true },
+  { slug: "poczta_polska", label: "Poczta Polska (Polen)", implemented: true, needsKey: true },
+  { slug: "inpost", label: "InPost (Polen)", implemented: true, needsKey: true },
+  { slug: "swiss_post", label: "Swiss Post (Zwitserland)", implemented: true, needsKey: true },
+];
 
 customElements.define("be-parcels-card", BeParcelsCard);
 

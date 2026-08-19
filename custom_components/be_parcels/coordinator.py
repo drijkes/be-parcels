@@ -20,8 +20,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .carriers import CARRIERS
 from .carriers.base import ParcelNotFoundError, ParcelProviderError, ParcelStatus
+from .carriers.track123 import Track123Carrier
 from .const import (
     CONF_NOTIFY_SERVICES,
+    CONF_TRACK123_API_KEY,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     EVENT_STATUS_CHANGED,
@@ -55,6 +57,8 @@ class ParcelsCoordinator(DataUpdateCoordinator[dict[str, ParcelStatus]]):
         carrier_cls = CARRIERS[parcel_cfg["carrier"]]
         session = async_get_clientsession(self.hass)
         carrier = carrier_cls(session)
+        if isinstance(carrier, Track123Carrier):
+            carrier.api_key = self.entry.options.get(CONF_TRACK123_API_KEY, "").strip() or None
         try:
             return await carrier.async_get_status(
                 parcel_cfg["tracking_number"], parcel_cfg.get("postal_code")

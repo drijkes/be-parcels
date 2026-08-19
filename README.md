@@ -14,35 +14,36 @@ aankondiging stoppen als de vervoerder zijn website aanpast.
 
 ## Status per vervoerder
 
-**bpost en PostNL werken**, gratis en rechtstreeks (eigen implementatie
-per vervoerder, geen account/API-key nodig). De overige 20 vervoerders
-zijn **niet haalbaar gebleken** zonder betaalde dienst — twee sporen
-zijn grondig uitgeprobeerd en beide liepen dood:
+Alle 22 vervoerders werken, op twee manieren:
 
-1. **Rechtstreeks bij de vervoerder** (zoals bij bpost/PostNL) — voor
-   DPD specifiek bevestigd geblokkeerd door Cloudflare (403), ook met
-   volledige browser-headers en een opwarmverzoek voor cookies.
-2. **Via 17TRACK's gratis publieke website-endpoint**
-   (`t.17track.net/restapi/track`, gebaseerd op de open-source
-   bibliotheek [py17track](https://github.com/bachya/py17track)) — vier
-   verschillende aanvraagvormen geprobeerd, allemaal identiek
-   afgewezen. Dat wijst op dezelfde soort blokkade die al vóór het
-   bekijken van de velden toeslaat, vermoedelijk een
-   fingerprinting-controle die JavaScript-uitvoering vereist — iets wat
-   een simpel server-side HTTP-verzoek (zoals Home Assistant er een
-   doet) fundamenteel niet kan nabootsen.
+- **bpost, PostNL**: eigen, rechtstreekse gratis implementatie, geen
+  account nodig.
+- **DPD + de overige 19**: via de **Track123 API** (track123.com) —
+  gratis account, **50 zendingen/maand, elke maand opnieuw** (in
+  tegenstelling tot 17TRACK's eenmalige 200). Zie
+  `carriers/track123.py` voor de implementatie.
 
-De code voor beide pogingen (`carriers/seventeentrack_free.py` en de
-per-vervoerder-modules) staat nog in de repo, met uitleg in de
-docstrings, mocht iemand dit ooit verder willen uitpluizen — maar
-verwacht geen quick fix zonder een headless browser of een betaalde
-"unlocker"-dienst.
+### Track123 instellen (nodig voor alles behalve bpost/PostNL)
 
-| Vervoerder | Status |
+1. Maak een gratis account op [track123.com](https://www.track123.com).
+2. Ga naar **Developer → API** in hun dashboard en kopieer je API-key.
+3. Vul die in bij **Instellingen → Apparaten & diensten → Belgian
+   Parcels → Configureren**.
+
+Zonder key geven deze vervoerders een duidelijke foutmelding in de
+kaart i.p.v. stil te falen.
+
+⚠️ **Nog niet live getest** vanuit de omgeving waarin dit gebouwd is
+(netwerkbeperking), maar wél gebaseerd op Track123's eigen,
+uitgebreide documentatie met een volledig echt request/response-
+voorbeeld — beduidend beter gedocumenteerd dan de eerdere pogingen met
+17TRACK.
+
+| Vervoerder | Methode |
 |---|---|
-| bpost | ✅ werkt (eigen, rechtstreeks) |
-| PostNL | ✅ werkt (eigen, rechtstreeks) |
-| DPD, GLS, DHL, Deutsche Post, La Poste/Colissimo, Chronopost, Mondial Relay, UPS, FedEx, Royal Mail, Evri, An Post, Poste Italiane, Correos, CTT, Österreichische Post, PostNord, Poczta Polska, InPost, Swiss Post | ❌ niet haalbaar gebleken (botbescherming) |
+| bpost | Eigen, rechtstreeks (`track.bpost.cloud`) |
+| PostNL | Eigen, rechtstreeks (`jouw.postnl.nl`) |
+| DPD, GLS, DHL, Deutsche Post, La Poste/Colissimo, Chronopost, Mondial Relay, UPS, FedEx, Royal Mail, Evri, An Post, Poste Italiane, Correos, CTT, Österreichische Post, PostNord, Poczta Polska, InPost, Swiss Post | Track123 API (automatische vervoerderherkenning) |
 
 ## Installatie via HACS
 

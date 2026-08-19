@@ -10,6 +10,7 @@ CONF_POSTAL_CODE = "postal_code"
 CONF_NAME = "name"
 CONF_PARCELS = "parcels"  # lijst van pakjes, opgeslagen in entry.options
 CONF_NOTIFY_SERVICES = "notify_services"  # lijst, bv. ["mobile_app_jan", "mobile_app_marie"]
+CONF_TRACK123_API_KEY = "track123_api_key"  # gratis account op track123.com
 
 DEFAULT_SCAN_INTERVAL = timedelta(minutes=20)
 

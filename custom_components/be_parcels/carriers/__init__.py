@@ -35,7 +35,12 @@ from .ups import UpsCarrier
 # Vervoerders die écht gratis werken (best-effort, zie hun eigen module
 # voor caveats). Gebruikt door de dashboard-kaart om "nog niet
 # geïmplementeerd" te tonen bij de rest.
-IMPLEMENTED_CARRIERS: set[str] = {"bpost", "postnl"}
+IMPLEMENTED_CARRIERS: set[str] = {
+    "bpost", "postnl", "dpd", "gls", "dhl", "deutsche_post", "la_poste",
+    "chronopost", "mondial_relay", "ups", "fedex", "royal_mail", "evri",
+    "an_post", "poste_italiane", "correos", "ctt", "austrian_post",
+    "postnord", "poczta_polska", "inpost", "swiss_post",
+}
 
 CARRIERS: dict[str, type[ParcelCarrier]] = {
     cls.slug: cls

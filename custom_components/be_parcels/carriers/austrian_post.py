@@ -1,38 +1,14 @@
-"""Österreichische Post vervoerder-plugin — NIET HAALBAAR (gratis, zonder account).
+"""Österreichische Post vervoerder-plugin — via de Track123 API.
 
-Twee sporen zijn geprobeerd en beide falen, om dezelfde reden: een
-botbescherming die verder gaat dan headers/cookies en waarschijnlijk
-JavaScript-uitvoering vereist (fingerprinting/uitdaging), wat een
-simpel server-side HTTP-verzoek fundamenteel niet kan nabootsen:
-
-  1. Rechtstreeks bij de vervoerder zelf (zoals wél lukte bij bpost en
-     PostNL) — voor DPD specifiek bevestigd geblokkeerd door Cloudflare
-     (403), ook met volledige browser-headers + opwarmverzoek.
-  2. Via 17TRACK's gratis publieke website-endpoint
-     (carriers/seventeentrack_free.py, t.17track.net/restapi/track) —
-     4 verschillende aanvraagvormen geprobeerd, allemaal identiek
-     afgewezen, wat wijst op dezelfde soort blokkade vóór zelfs de
-     velden bekeken worden.
-
-CONCLUSIE: Österreichische Post is met gratis, server-side middelen niet haalbaar
-binnen deze integratie. Enige realistische alternatieven: een betaalde
-"unlocker"-/aggregator-dienst, of een headless browser (Playwright) —
-beide bewust niet gebruikt. Zie README.md voor het volledige overzicht.
+Zie carriers/track123.py voor de gedeelde implementatie. Vervoerder
+wordt automatisch gedetecteerd (geen courier_code opgegeven), zoals
+Track123 zelf aanraadt wanneer je niet zeker bent van de exacte code.
 """
 from __future__ import annotations
 
-from .base import ParcelCarrier, ParcelProviderError, ParcelStatus
+from .track123 import Track123Carrier
 
 
-class AustrianPostCarrier(ParcelCarrier):
+class AustrianPostCarrier(Track123Carrier):
     slug = "austrian_post"
     name = "Österreichische Post"
-    requires_postal_code = False
-
-    async def async_get_status(
-        self, tracking_number: str, postal_code: str | None = None
-    ) -> ParcelStatus:
-        raise ParcelProviderError(
-            "Österreichische Post is niet haalbaar gebleken zonder betaalde dienst — "
-            "zie de uitleg bovenaan carriers/austrian_post.py."
-        )

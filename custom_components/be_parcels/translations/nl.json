@@ -3,9 +3,10 @@
     "step": {
       "user": {
         "title": "Belgian Parcels toevoegen",
-        "description": "Dit maakt de hub aan. Pakjes voeg je daarna toe via de meegeleverde dashboard-kaart, niet hier. Vink hieronder optioneel meteen aan welke toestellen een melding moeten krijgen zodra een pakje onderweg is.",
+        "description": "Dit maakt de hub aan. Pakjes voeg je daarna toe via de meegeleverde dashboard-kaart, niet hier. Vink optioneel toestellen aan voor meldingen, en vul je gratis Track123 API-key in (nodig voor alle vervoerders behalve bpost/PostNL) — kan ook later via Configureren.",
         "data": {
-          "notify_services": "Toestellen om te melden"
+          "notify_services": "Toestellen om te melden",
+          "track123_api_key": "Track123 API-key (optioneel, voor niet-bpost/PostNL vervoerders)"
         }
       }
     },
@@ -17,9 +18,10 @@
     "step": {
       "init": {
         "title": "Belgian Parcels instellingen",
-        "description": "Vink de toestellen aan die een melding moeten krijgen zodra een pakje 'onderweg met de bezorger' is. Niets aanvinken schakelt meldingen uit.",
+        "description": "Vink de toestellen aan die een melding moeten krijgen zodra een pakje 'onderweg met de bezorger' is. Vul ook je Track123 API-key in als je vervoerders naast bpost/PostNL wil gebruiken (gratis account op track123.com).",
         "data": {
-          "notify_services": "Toestellen om te melden"
+          "notify_services": "Toestellen om te melden",
+          "track123_api_key": "Track123 API-key"
         }
       }
     }
@@ -39,7 +41,7 @@
         },
         "postal_code": {
           "name": "Postcode",
-          "description": "Postcode van de ontvanger (verplicht bij bpost)."
+          "description": "Postcode van de ontvanger (verplicht bij bpost en PostNL)."
         },
         "name": {
           "name": "Weergavenaam",

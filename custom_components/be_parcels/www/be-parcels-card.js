@@ -16,7 +16,7 @@ class BeParcelsCard extends HTMLElement {
     try {
       return localStorage.getItem(BeParcelsCard.POSTAL_CODE_STORAGE_KEY) || "";
     } catch (err) {
-      return ""; // localStorage niet beschikbaar (bv. privénavigatie)
+      return ""; // localStorage niet beschikbaar (bv. privenavigatie)
     }
   }
 
@@ -128,7 +128,7 @@ class BeParcelsCard extends HTMLElement {
               }
               ${
                 trackingUrl
-                  ? `<a class="parcel-link" href="${this._escape(trackingUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Bekijk op vervoerder-site ↗</a>`
+                  ? `<a class="parcel-link" href="${this._escape(trackingUrl)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">Bekijk op vervoerder-site (new tab)</a>`
                   : ""
               }
             </div>
@@ -337,10 +337,10 @@ class BeParcelsCard extends HTMLElement {
               }
             }
             if (!found || !found.implemented) {
-              return '<div class="warning">Deze vervoerder werkt niet — toevoegen zal een foutmelding geven. Zie README.md voor details.</div>';
+              return '<div class="warning">Deze vervoerder werkt niet - toevoegen zal een foutmelding geven. Zie README.md voor details.</div>';
             }
             if (found.needsKey) {
-              return '<div class="warning">Vereist een gratis Track123 API-key, in te stellen bij Instellingen → Belgian Parcels → Configureren.</div>';
+              return '<div class="warning">Vereist een gratis Track123 API-key, in te stellen bij Instellingen -> Belgian Parcels -> Configureren.</div>';
             }
             return "";
           })(this)
@@ -398,7 +398,7 @@ class BeParcelsCard extends HTMLElement {
 }
 
 // Als gewone (niet-static-class-field) toewijzingen gedefinieerd voor
-// maximale compatibiliteit — sommige ingebouwde app-browsers (bv. de
+// maximale compatibiliteit - sommige ingebouwde app-browsers (bv. de
 // Home Assistant companion-app op oudere toestellen) ondersteunen de
 // nieuwere "static veld"-klassensyntax niet.
 BeParcelsCard.POSTAL_CODE_STORAGE_KEY = "be_parcels_last_postal_code";
@@ -409,7 +409,7 @@ BeParcelsCard.POSTAL_CODE_MODE = {
 };
 
 BeParcelsCard.CARRIERS = [
-  { slug: "bpost", label: "bpost (België)", implemented: true, needsKey: false },
+  { slug: "bpost", label: "bpost (Belgie)", implemented: true, needsKey: false },
   { slug: "dpd", label: "DPD", implemented: true, needsKey: true },
   { slug: "gls", label: "GLS (EU)", implemented: true, needsKey: true },
   { slug: "postnl", label: "PostNL (Nederland)", implemented: true, needsKey: false },
@@ -423,10 +423,10 @@ BeParcelsCard.CARRIERS = [
   { slug: "royal_mail", label: "Royal Mail (VK)", implemented: true, needsKey: true },
   { slug: "evri", label: "Evri / Hermes (VK)", implemented: true, needsKey: true },
   { slug: "an_post", label: "An Post (Ierland)", implemented: true, needsKey: true },
-  { slug: "poste_italiane", label: "Poste Italiane (Italië)", implemented: true, needsKey: true },
+  { slug: "poste_italiane", label: "Poste Italiane (Italie)", implemented: true, needsKey: true },
   { slug: "correos", label: "Correos (Spanje)", implemented: true, needsKey: true },
   { slug: "ctt", label: "CTT (Portugal)", implemented: true, needsKey: true },
-  { slug: "austrian_post", label: "Österreichische Post (Oostenrijk)", implemented: true, needsKey: true },
+  { slug: "austrian_post", label: "Osterreichische Post (Oostenrijk)", implemented: true, needsKey: true },
   { slug: "postnord", label: "PostNord (SE/DK)", implemented: true, needsKey: true },
   { slug: "poczta_polska", label: "Poczta Polska (Polen)", implemented: true, needsKey: true },
   { slug: "inpost", label: "InPost (Polen)", implemented: true, needsKey: true },

@@ -15,6 +15,7 @@ import re
 import voluptuous as vol
 
 from homeassistant.components.frontend import add_extra_js_url
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -58,7 +59,45 @@ FRONTEND_URL_PATH = "/be_parcels_static/be-parcels-card.js"
 # proxies/CDN's het bestand agressief cachen, ook na een update van de
 # integratie. Dit handmatig ophogen bij elke wijziging aan de kaart-JS
 # dwingt een verse download af, ongeacht caching ergens tussenin.
-FRONTEND_JS_CACHE_VERSION = "34"
+FRONTEND_JS_CACHE_VERSION = "35"
+
+
+class _ParcelsCardView(HomeAssistantView):
+    """Levert de kaart-JS met een GEGARANDEERD correcte Content-Type.
+
+    De standaard static-file-registratie van Home Assistant laat het
+    detecteren van het mimetype over aan het systeem (Python's
+    'mimetypes'-module). Op sommige installaties (vooral minimale
+    containers zoals Home Assistant OS) levert dat soms geen/verkeerd
+    resultaat op, wat een gewone desktopbrowser meestal nog door de
+    vingers ziet, maar wat strengere ingebouwde browsers — zoals die in
+    de Home Assistant companion-app — kunnen weigeren uit te voeren.
+    Deze eigen view zet de header expliciet, ongeacht systeeminstellingen.
+    """
+
+    url = FRONTEND_URL_PATH
+    name = "be_parcels:card_js"
+    requires_auth = False
+
+    def __init__(self, js_path: str) -> None:
+        self._js_path = js_path
+
+    async def get(self, request):
+        from aiohttp import web
+
+        try:
+            content = await request.app["hass"].async_add_executor_job(
+                pathlib.Path(self._js_path).read_text, "utf-8"
+            )
+        except OSError as err:
+            return web.Response(status=404, text=f"be_parcels card niet gevonden: {err}")
+
+        return web.Response(
+            text=content,
+            content_type="application/javascript",
+            charset="utf-8",
+            headers={"Cache-Control": "public, max-age=31536000, immutable"},
+        )
 
 
 async def _async_register_frontend_card(hass: HomeAssistant) -> None:
@@ -82,20 +121,14 @@ async def _async_register_frontend_card(hass: HomeAssistant) -> None:
         )
         return
 
+    # Cache-Control staat hierboven al op "immutable" (mag voor altijd
+    # gecachet worden) — dat is precies waarom een uniek versienummer in
+    # de URL zelf zo belangrijk is: een nieuwe versie krijgt een nieuwe
+    # URL, dus wordt nooit uit een oude cache bediend.
     versioned_url = f"{FRONTEND_URL_PATH}?v={FRONTEND_JS_CACHE_VERSION}"
 
     try:
-        try:
-            # Home Assistant >= 2024.7
-            from homeassistant.components.http import StaticPathConfig
-
-            await hass.http.async_register_static_paths(
-                [StaticPathConfig(FRONTEND_URL_PATH, js_path, False)]
-            )
-        except ImportError:
-            # Oudere Home Assistant-versies
-            hass.http.register_static_path(FRONTEND_URL_PATH, js_path, False)
-
+        hass.http.register_view(_ParcelsCardView(js_path))
         add_extra_js_url(hass, versioned_url)
     except Exception:  # noqa: BLE001 - we willen dit gegarandeerd loggen
         _LOGGER.exception(
